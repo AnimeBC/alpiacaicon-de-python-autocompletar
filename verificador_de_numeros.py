@@ -4,9 +4,11 @@ from tkinter import filedialog
 from tkinter import messagebox
 import pandas as pd
 import pyautogui
-
+import os  # Importa el módulo os aquí
+from PIL import Image
 # Variable de control para evitar duplicación de automatización
 is_automating = False
+current_index = 0
 
 def load_file():
     global is_automating
@@ -24,7 +26,32 @@ def load_file():
         validate_and_set_index()
 
     is_automating = False
+def take_screenshot():
+    global current_index  # Solo necesitamos declarar 'global' una vez por función
+    if phone_numbers and 0 <= current_index < len(phone_numbers):
+        phone_number = phone_numbers[current_index]
+        file_name = f"{current_index+1}_{phone_number}.png"
+        folder_path = r'C:\Users\PC_\Documents\tienda pastrana\automatizacion\capturas'
+        os.makedirs(folder_path, exist_ok=True)
+        screenshot_path = os.path.join(folder_path, file_name)
 
+        # Definir la región a capturar (x, y, width, height)
+        region = (700, 300, 750, 420)  # Ajusta estos valores según tus necesidades
+        myScreenshot = pyautogui.screenshot(region=region)
+
+        # Re-escalar la imagen (ajusta el factor de escala según necesites)
+        scale_factor = 2  # Aumenta la imagen en un factor de 2
+        original_size = myScreenshot.size
+        new_size = (int(original_size[0] * scale_factor), int(original_size[1] * scale_factor))
+        
+        # Usar LANCZOS para re-escalar la imagen
+        resized_image = myScreenshot.resize(new_size, Image.Resampling.LANCZOS)
+
+        # Guardar la imagen re-escalada
+        resized_image.save(screenshot_path)
+        messagebox.showinfo("Éxito", "Captura de pantalla guardada con éxito.")
+    else:
+        messagebox.showerror("Error", "No hay un número telefónico válido cargado o seleccionado.")
 def validate_and_set_index():
     global is_automating
     if is_automating:
@@ -130,7 +157,7 @@ screen_height = app.winfo_screenheight()
 # Calcula la posición para centrar verticalmente
 vertical_position = (screen_height // 2) - 200  # 100 es la mitad de la altura de la ventana
 
-app.geometry(f'450x200+0+{vertical_position}')  # '0+' es para el lado izquierdo de la pantalla
+app.geometry(f'500x250+0+{vertical_position}')  # '0+' es para el lado izquierdo de la pantalla
 app.attributes('-topmost', True)  # Hacer que la ventana siempre esté en la parte superior
 
 
@@ -161,4 +188,8 @@ step_2_button = ttk.Button(app, text="Ejecutar Paso 2", command=click_at_specifi
 step_2_button.grid(row=3, column=0, sticky='w', padx=(50,0), pady=10)
 step_3_button = ttk.Button(app, text="Ejecutar Paso 3", command=execute_step_3)
 step_3_button.grid(row=3, column=2, sticky='e', padx=(0,50))
+# Añadir un botón para tomar captura de pantalla
+screenshot_button = ttk.Button(app, text="Tomar Captura de Pantalla", command=take_screenshot)
+screenshot_button.grid(row=4, column=0, sticky='w', padx=(50,0), pady=10)
+
 app.mainloop()
